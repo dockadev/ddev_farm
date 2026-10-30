@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ddev_farm</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/farm.css">
+</head>
+<body>
+    
+    <div id="progress-container" class="hidden">
+        <div id="progress-panel" class="progress-panel">
+            <img id="progress-icon" class="progress-icon" src="images/apple.png" alt="">
+            <div class="progress-head">
+                <span id="progress-label" class="progress-label">Harvesting</span>
+                <span id="progress-dots" class="progress-dots">
+                    <span>.</span><span>.</span><span>.</span>
+                </span>
+                <span id="progress-check" class="progress-check hidden">&#10003;</span>
+                <span id="progress-result" class="progress-result hidden"></span>
+            </div>
+            <div class="progress-sep"></div>
+            <div class="progress-track">
+                <div id="progress-fill" class="progress-fill"></div>
+                <span class="progress-tick" style="left: 25%"></span>
+                <span class="progress-tick" style="left: 75%"></span>
+            </div>
+            <div class="progress-foot">
+                <div class="progress-stages">
+                    <span id="stage-1" class="progress-stage" data-label="1">1</span>
+                    <span id="stage-2" class="progress-stage" data-label="2">2</span>
+                </div>
+                <span id="progress-cancel-hint" class="progress-cancel-hint"></span>
+                <span id="progress-percent" class="progress-percent">0%</span>
+            </div>
+
+            
+            <div id="skillcheck-container" class="hidden">
+                <div id="skillcheck-bar" class="skillcheck-bar">
+                    <div id="skillcheck-zone" class="skillcheck-zone"></div>
+                    <div id="skillcheck-cursor" class="skillcheck-cursor"></div>
+                </div>
+                <div id="skillcheck-hint" class="skillcheck-hint" data-i18n="skillcheckHint">[E] Harvest</div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="hint-container" class="hidden">
+        <div id="hint-header" class="hint-header hidden"></div>
+        <div class="hint-row">
+            <img id="hint-icon" class="hint-icon hidden" alt="">
+            <span class="hint-key" id="hint-key">E</span>
+            <span class="hint-label" id="hint-label">Open Market</span>
+            <span class="hint-extra" id="hint-extra"></span>
+        </div>
+        <div id="hint-footer" class="hint-footer hidden"></div>
+    </div>
+
+    
+    <div id="market-container" class="hidden">
+        
+        <div id="market-detail" class="market-detail"></div>
+
+        <div class="market-panel">
+            <div class="market-header">
+                <span class="admin-title">
+                    <span class="admin-title-rest" id="market-title" data-i18n="marketTitle">Market Prices</span>
+                </span>
+                <button class="close-btn" onclick="closeMarket()">&times;</button>
+            </div>
+            <div id="market-progress" class="market-progress hidden"></div>
+            <div class="market-body">
+                <div id="market-rows" class="market-list"></div>
+            </div>
+            <div class="market-footer" data-i18n="marketFooter">Prices shift with real trading volume.</div>
+        </div>
+    </div>
+
+    
+    <div id="admin-container" class="hidden">
+        <div id="admin-panel" class="admin-panel">
+            <div class="admin-header">
+                <span class="admin-title">
+                    <span class="brand"><span class="brand-name">docka</span><span class="brand-dev">dev</span></span>
+                    <span class="admin-title-rest" id="admin-title-rest">Farming Script - Config Menu</span>
+                </span>
+            </div>
+            <div class="admin-body">
+                <div id="admin-tabs" class="admin-tabs"></div>
+                <div id="admin-content" class="admin-content"></div>
+            </div>
+            <div class="admin-footer">
+                <button id="admin-close" class="admin-btn">Close</button>
+                <span id="admin-hint" class="admin-hint"></span>
+                <div class="admin-actions">
+                    <button id="admin-reset" class="admin-btn">Reset</button>
+                    <button id="admin-save" class="admin-btn primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="farm-container" class="hidden">
+        <div class="farm-frame">
+            <div class="farm-screen">
+                <div class="farm-head">
+                    <span class="admin-title">
+                        <span class="brand"><span class="brand-name">docka</span><span class="brand-dev">dev</span></span>
+                        <span class="admin-title-rest" data-i18n="farmTitle">Farm Panel</span>
+                    </span>
+                </div>
+
+                <div class="farm-body">
+                    <div class="farm-col">
+                        <div class="farm-card">
+                            <div class="farm-section" data-i18n="farmProgress">Progress</div>
+                            <div class="farm-level-row">
+                                <span class="farm-level" id="farm-level">Lv. 1</span>
+                                <span class="farm-bonus" id="farm-bonus">+0.0%</span>
+                            </div>
+                            <div class="farm-bar"><i id="farm-bar-fill"></i></div>
+                            <div class="farm-next" id="farm-next"></div>
+                            <div class="farm-section farm-roadmap-title" data-i18n="farmRoadmap">Level Rewards</div>
+                            <div class="farm-roadmap" id="farm-roadmap"></div>
+                        </div>
+
+                        <div class="farm-card">
+                            <div class="farm-section" data-i18n="farmLifetime">Lifetime</div>
+                            <div class="farm-stat"><span data-i18n="farmHarvested">Harvested</span><b id="farm-stat-harvested">0</b></div>
+                            <div class="farm-stat"><span data-i18n="farmSold">Sold</span><b id="farm-stat-sold">0</b></div>
+                            <div class="farm-stat"><span data-i18n="farmEarned">Earned</span><b id="farm-stat-earned">$0</b></div>
+                        </div>
+                    </div>
+
+                    <div class="farm-col farm-col-right">
+                        <div class="farm-card farm-card-fill">
+                            <div class="farm-section">
+                                <span data-i18n="farmRecentSales">Recent Sales</span>
+                            </div>
+                            <div id="farm-sales" class="farm-sales"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="farm-foot">
+                    <button class="farm-pref" id="farm-pref-level" data-pref="levelUp">Level up notifications: ON</button>
+                    <button class="farm-pref" id="farm-pref-sounds" data-pref="sounds">Sounds: ON</button>
+                    <button class="farm-pref primary" id="farm-pref-save">Save</button>
+                </div>
+
+                
+                <button class="farm-homebar" onclick="closeFarmPanel()" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="tools-container" class="hidden">
+        <div class="tools-panel">
+            <div class="tools-head">
+                <span class="admin-title">
+                    <span class="brand"><span class="brand-name">docka</span><span class="brand-dev">dev</span></span>
+                    <span class="admin-title-rest">Placement Tools</span>
+                </span>
+                <button class="tools-close" onclick="closeToolsPanel()">&times;</button>
+            </div>
+
+            <div class="tools-body">
+                <div class="tools-row">
+                    <span class="tools-label">Mode</span>
+                    <div class="tools-group" id="tools-mode">
+                        <button class="tools-chip active" data-mode="place">Place</button>
+                        <button class="tools-chip" data-mode="line">Line</button>
+                    </div>
+                </div>
+
+                <div class="tools-row">
+                    <span class="tools-label">Crop</span>
+                    <div class="tools-crop-wrap">
+                        <img id="tools-crop-icon" class="tools-crop-icon" src="images/apple.png" alt="">
+                        <div class="tools-group" id="tools-crops"></div>
+                    </div>
+                </div>
+
+                <div class="tools-row" id="tools-spacing-row">
+                    <span class="tools-label">Spacing</span>
+                    <div class="tools-stepper">
+                        <button data-step="spacing" data-dir="-1">&minus;</button>
+                        <input id="tools-spacing" class="tools-input" type="number" value="4" min="0.5" max="25" step="0.5">
+                        <button data-step="spacing" data-dir="1">&plus;</button>
+                        <span class="tools-unit">m</span>
+                    </div>
+                </div>
+
+                <div class="tools-row">
+                    <span class="tools-label">Height</span>
+                    <div class="tools-stepper">
+                        <button data-step="height" data-dir="-1">&minus;</button>
+                        <input id="tools-height" class="tools-input" type="number" value="0" step="0.05">
+                        <button data-step="height" data-dir="1">&plus;</button>
+                        <span class="tools-unit">m</span>
+                    </div>
+                </div>
+
+                <div class="tools-row">
+                    <span class="tools-label">Rotation</span>
+                    <div class="tools-stepper">
+                        <button data-step="heading" data-dir="-15">&minus;</button>
+                        <input id="tools-heading" class="tools-input" type="number" value="0" step="15">
+                        <button data-step="heading" data-dir="15">&plus;</button>
+                        <span class="tools-unit">&deg;</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tools-note">
+                <div class="tools-note-title">After Start you can still adjust in-game:</div>
+                <div class="tools-note-keys">
+                    <span class="tools-note-key">,&nbsp;&nbsp;.</span><span class="tools-note-label">Rotate</span>
+                    <span class="tools-note-key">[&nbsp;&nbsp;]</span><span class="tools-note-label">Spacing</span>
+                    <span class="tools-note-key">&uarr;&nbsp;&nbsp;&darr;</span><span class="tools-note-label">Height</span>
+                </div>
+            </div>
+
+            <div class="tools-warn" data-i18n="toolsRestartWarn">After placing, run Apply Nodes in /farmadmin (or restart ddev_farm) to see the props in game.</div>
+
+            <div class="tools-foot">
+                <button class="tools-start" onclick="startToolsPlacement()">Start Placement</button>
+            </div>
+
+            <div class="tools-npc">
+                <div class="tools-section">Market NPC</div>
+                <button class="tools-npc-btn" onclick="setNpcFromTools()">Set NPC to My Position</button>
+                <div class="tools-npc-status" id="tools-npc-status"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/locale.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/progress.js"></script>
+    <script src="js/skillcheck.js"></script>
+    <script src="js/market.js"></script>
+    <script src="js/hud.js"></script>
+    <script src="js/admin-i18n.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/farm.js"></script>
+    <script src="js/tools.js"></script>
+</body>
+</html>

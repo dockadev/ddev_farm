@@ -1,0 +1,92 @@
+#dev-panel {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 9999;
+    width: 300px;
+    background: rgba(15, 15, 15, 0.94);
+    border: 1px solid #444;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    color: #ecf0f1;
+    font-size: 13px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6);
+}
+
+.dev-title {
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #2ecc71;
+    margin-bottom: 10px;
+}
+
+.dev-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.dev-row-label {
+    width: 44px;
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: #95a5a6;
+}
+
+.dev-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.dev-row button,
+.dev-buttons button {
+    background: #333;
+    border: 1px solid #555;
+    color: #ecf0f1;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.dev-row button:hover,
+.dev-buttons button:hover {
+    background: #444;
+}
+
+.dev-hint {
+    margin-top: 10px;
+    font-size: 11px;
+    color: #95a5a6;
+}
+
+.dev-log {
+    margin-top: 10px;
+    max-height: 180px;
+    overflow-y: auto;
+    font-family: Consolas, monospace;
+    font-size: 10px;
+    color: #7f8c8d;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 6px;
+    padding: 6px;
+}
+
+.dev-log-row {
+    padding: 2px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    word-break: break-all;
+}
+
+.dev-log-row b {
+    color: #95a5a6;
+    margin-right: 4px;
+}
