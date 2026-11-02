@@ -6,6 +6,11 @@ const adminSaveBtn = document.getElementById('admin-save');
 const adminResetBtn = document.getElementById('admin-reset');
 const adminCloseBtn = document.getElementById('admin-close');
 
+const adminDiscordLink = document.getElementById('admin-discord-link');
+const adminDiscordNote = document.getElementById('admin-discord-note');
+
+let adminDiscordNoteTimer = null;
+
 const ADMIN_GROUPS = ['market', 'harvest', 'minigame', 'world', 'progression', 'tools', 'setup', 'settings'];
 const ADMIN_LANGS = ['en', 'tr', 'de', 'fr', 'it', 'es'];
 
@@ -42,7 +47,6 @@ let adminResetTimer = null;
 let adminStatusData = null;
 let adminNodeStats = null;
 let adminNodeRequestAt = 0;
-let adminSupport = {};
 let armedNodeCrop = null;
 let armedNodeTimer = null;
 let armedTool = null;
@@ -77,30 +81,6 @@ function renderExtendedTab() {
         '</div>' +
         blocks +
         '</div>';
-}
-
-function copyDiscordInvite(link) {
-    const url = (adminSupport && adminSupport.discord) || '';
-    if (!url) return;
-
-    const ta = document.createElement('textarea');
-    ta.value = url;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
-
-    try { document.execCommand('copy'); } catch (e) {}
-
-    document.body.removeChild(ta);
-
-    if (link) {
-        const original = link.dataset.label || link.textContent;
-        link.dataset.label = original;
-        link.textContent = (text().extended || {}).copied || 'Copied';
-
-        setTimeout(function () { link.textContent = original; }, 2000);
-    }
 }
 
 function text() {
@@ -221,10 +201,6 @@ function renderTabs() {
         return `<button class="admin-tab${active}" data-tab="${group}">${label}</button>`;
     }).join('');
 
-    if (adminSupport && adminSupport.discord) {
-        adminTabsEl.innerHTML += '<a class="admin-tab admin-tab-discord" data-discord="1">Discord</a>';
-    }
-
     const extActive = adminTab === 'extended' ? ' active' : '';
     adminTabsEl.innerHTML +=
         `<button class="admin-tab admin-tab-ext${extActive}" data-tab="extended">` +
@@ -292,26 +268,32 @@ function renderSetup() {
     });
 
     adminContentEl.innerHTML =
-        '<div class="admin-setup">' +
-        blocks.map(function (block) {
-            return '<div class="admin-setup-block">' +
-                `<div class="admin-section">${block.title}</div>` +
-                `<div class="admin-setup-text">${block.body || ''}</div>` +
-                '</div>';
-        }).join('') +
-        '<div class="admin-setup-block">' +
+        '<div class="admin-page">' +
+        '<div class="admin-block">' +
         `<div class="admin-section">${s.manageTitle || ''}</div>` +
+        `<div class="admin-node-hint">${s.nodeHint || ''}</div>` +
         '<div id="admin-node-stats" class="admin-node-stats"></div>' +
-        '<div class="admin-node-actions">' +
+        '<div class="admin-link-row">' +
         `<button class="admin-tool" data-action="applyNodes">${s.manageApply || ''}</button>` +
         `<button class="admin-tool" data-action="nodeStats">${s.manageRefresh || ''}</button>` +
         `<button class="admin-tool" data-action="clearNodes">${s.manageClear || ''}</button>` +
         '</div>' +
         '</div>' +
-        '<div class="admin-setup-block">' +
+        '<div class="admin-block">' +
         `<div class="admin-section">${s.toolsTitle || ''}</div>` +
         `<div class="admin-setup-text">${s.toolsBody || ''}</div>` +
-        `<button class="admin-tool admin-tool-wide" data-action="openTools">${s.toolsButton || ''}</button>` +
+        '<div class="admin-link-row">' +
+        `<button class="admin-tool" data-action="openTools">${s.toolsButton || ''}</button>` +
+        '</div>' +
+        '</div>' +
+        '<div class="admin-block">' +
+        `<div class="admin-section">${blocks[0] ? blocks[0].title : ''}</div>` +
+        blocks.map(function (block) {
+            return '<div class="admin-info-row">' +
+                `<span class="admin-info-name">${block.title}</span>` +
+                `<span class="admin-info-value">${block.body || ''}</span>` +
+                '</div>';
+        }).join('') +
         '</div>' +
         '</div>';
 
@@ -335,16 +317,23 @@ function renderNodeStats() {
 
     const setupText = text().setup || {};
 
-    el.innerHTML = Object.keys(stats).map(function (crop) {
+    el.innerHTML =
+        `<div class="admin-node-row admin-node-head">` +
+        `<span>${setupText.nodeCrop || 'Crop'}</span>` +
+        `<span>${setupText.nodeSaved || 'Saved Props'}</span>` +
+        `<span>${setupText.nodeActive || 'Active Plants'}</span>` +
+        '<span></span>' +
+        '</div>' +
+        Object.keys(stats).map(function (crop) {
         const row = stats[crop] || {};
 
         return '<div class="admin-node-row">' +
             `<span class="admin-node-name">${row.label || crop}</span>` +
-            `<span class="admin-node-num">${row.file || 0} ${setupText.manageSaved || 'saved'}</span>` +
-            `<span class="admin-node-num dim">${row.active || 0} ${setupText.manageActive || 'active'}</span>` +
+            `<span class="admin-node-num">${row.file || 0}</span>` +
+            `<span class="admin-node-num dim">${row.active || 0}</span>` +
             `<button class="admin-node-clear" data-crop="${crop}" data-label="${setupText.manageRowClear || 'Clear'}">${setupText.manageRowClear || 'Clear'}</button>` +
             '</div>';
-    }).join('');
+        }).join('');
 }
 
 function armNodeClear(element, crop) {
@@ -416,11 +405,8 @@ function renderRow(def) {
 
     const tip = settingTip(def);
     const infoBtn = tip ? `<button class="admin-info" data-info="${def.key}">i</button>` : '';
-    const tipDefault = defaultText
-        ? `<span class="admin-tip-default">${text().defaultPrefix}: ${defaultText}</span>`
-        : '';
     const tipLine = (tip && adminOpenTips[def.key])
-        ? `<span class="admin-row-tip">${tip}${tipDefault}</span>`
+        ? `<span class="admin-row-tip">${tip}</span>`
         : '';
 
     let control;
@@ -569,29 +555,45 @@ function renderTools() {
     });
 
     adminContentEl.innerHTML =
-        '<div class="admin-tools">' +
-        '<div class="admin-tool-grid">' +
+        '<div class="admin-page">' +
+        '<div class="admin-block">' +
+        `<div class="admin-section">${text().tabs.tools}</div>` +
+        '<div class="admin-link-row">' +
         `<button class="admin-tool" data-action="resetPrices">${t.resetPrices}</button>` +
         `<button class="admin-tool" data-action="tickNow">${t.tickNow}</button>` +
         `<button class="admin-tool" data-action="readyAll">${t.readyAll}</button>` +
         `<button class="admin-tool" data-action="resync">${t.resync}</button>` +
         `<button class="admin-tool" data-action="status">${t.status}</button>` +
         '</div>' +
-        '<div class="admin-tool-block">' +
-        `<span class="admin-tool-label">${t.pruneLabel}</span>` +
+        '</div>' +
+        '<div class="admin-block">' +
+        `<div class="admin-section">${t.pruneLabel}</div>` +
+        '<div class="admin-form-row">' +
         '<input id="admin-prune-days" class="admin-input" type="number" value="30" min="1" step="1">' +
         `<span class="admin-unit">${t.days}</span>` +
-        `<button class="admin-tool admin-tool-wide" data-action="pruneLog">${t.prune}</button>` +
+        `<button class="admin-tool" data-action="pruneLog">${t.prune}</button>` +
         '</div>' +
-        '<div class="admin-tool-block">' +
-        `<span class="admin-tool-label">${t.giveLabel}</span>` +
-        `<input id="admin-give-target" class="admin-input" type="number" placeholder="${t.playerId}" min="1">` +
-        renderDropdown('giveCrop', cropOptions, 'apple') +
-        '<input id="admin-give-count" class="admin-input" type="number" value="1" min="1">' +
-        renderDropdown('giveQuality', qualityOptions, '1') +
-        `<button class="admin-tool admin-tool-wide" data-action="giveItem">${t.give}</button>` +
         '</div>' +
+        '<div class="admin-block">' +
+        `<div class="admin-section">${t.giveLabel}</div>` +
+        '<div class="admin-form-grid">' +
+        `<label class="admin-field"><span class="admin-field-label">${t.playerId}</span>` +
+        '<input id="admin-give-target" class="admin-input" type="number" min="1"></label>' +
+        `<label class="admin-field"><span class="admin-field-label">${t.giveLabel}</span>` +
+        `${renderDropdown('giveCrop', cropOptions, 'apple')}</label>` +
+        '<label class="admin-field"><span class="admin-field-label">#</span>' +
+        '<input id="admin-give-count" class="admin-input" type="number" value="1" min="1"></label>' +
+        `<label class="admin-field"><span class="admin-field-label">${qualities[1] || ''}</span>` +
+        `${renderDropdown('giveQuality', qualityOptions, '1')}</label>` +
+        '</div>' +
+        '<div class="admin-link-row">' +
+        `<button class="admin-tool" data-action="giveItem">${t.give}</button>` +
+        '</div>' +
+        '</div>' +
+        '<div class="admin-block">' +
+        `<div class="admin-section">${t.status}</div>` +
         '<div id="admin-status" class="admin-status"></div>' +
+        '</div>' +
         '</div>';
 
     renderStatus();
@@ -717,11 +719,6 @@ if (adminTabsEl) {
         const tab = e.target.closest('.admin-tab');
         if (!tab) return;
 
-        if (tab.dataset.discord) {
-            copyDiscordInvite(tab);
-            return;
-        }
-
         if (!tab.dataset.tab) return;
 
         adminTab = tab.dataset.tab;
@@ -732,6 +729,41 @@ if (adminTabsEl) {
 
 if (adminCloseBtn) {
     adminCloseBtn.addEventListener('click', closeAdminPanel);
+}
+
+function selectDiscordInvite() {
+    const url = 'https://discord.gg/Gep3cg64q4';
+    const area = document.createElement('textarea');
+
+    area.value = url;
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+
+    let copied = false;
+
+    try {
+        copied = document.execCommand('copy');
+    } catch (e) {
+        copied = false;
+    }
+
+    area.remove();
+    window.getSelection().removeAllRanges();
+
+    if (adminDiscordNote && copied) {
+        adminDiscordNote.textContent = text().copied || 'Copied';
+
+        clearTimeout(adminDiscordNoteTimer);
+        adminDiscordNoteTimer = setTimeout(function () {
+            adminDiscordNote.textContent = '';
+        }, 2000);
+    }
+}
+
+if (adminDiscordLink) {
+    adminDiscordLink.addEventListener('click', selectDiscordInvite);
 }
 
 document.addEventListener('click', function (e) {
@@ -976,7 +1008,6 @@ window.addEventListener('message', function (event) {
     if (!data || !data.action) return;
 
     if (data.action === 'adminOpen') {
-        adminSupport = data.support || {};
         openAdminPanel(data.settings);
     } else if (data.action === 'adminUpdate') {
         updateAdminPanel(data.settings);

@@ -4,6 +4,8 @@ let currentProgress = null;
 
 let playerStock = {};
 
+let currentFocus = null;
+
 let detailTimer = null;
 
 function qualityLabel(quality) {
@@ -40,23 +42,41 @@ function normalizeStock(entry) {
     return { total: 0, broken: 0, normal: 0, good: 0 };
 }
 
-function priceTrend(index) {
+function priceTrend(index, change) {
+    const cap = (text) => (text ? text.charAt(0).toUpperCase() + text.slice(1) : text);
+    const pct = typeof change === 'number' ? change : null;
+
+    if (pct !== null) {
+        if (pct > 0.05) {
+            return { icon: '▲', cls: 'trend-up', text: `${pct.toFixed(1)}% ${cap(t('priceRising'))}` };
+        }
+
+        if (pct < -0.05) {
+            return { icon: '▼', cls: 'trend-down', text: `${Math.abs(pct).toFixed(1)}% ${cap(t('priceFalling'))}` };
+        }
+
+        return { icon: '—', cls: 'trend-flat', text: '' };
+    }
+
     const value = typeof index === 'number' ? index : 1.0;
 
     if (value > 1.03) {
-        const pct = Math.round((value - 1) * 100);
-        return { icon: '▲', cls: 'trend-up', text: `${pct}% ${t('priceRising')}` };
+        const fallbackPct = Math.round((value - 1) * 100);
+        return { icon: '▲', cls: 'trend-up', text: `${fallbackPct}% ${cap(t('priceRising'))}` };
     }
+
     if (value < 0.97) {
-        const pct = Math.round((1 - value) * 100);
-        return { icon: '▼', cls: 'trend-down', text: `${pct}% ${t('priceFalling')}` };
+        const fallbackPct = Math.round((1 - value) * 100);
+        return { icon: '▼', cls: 'trend-down', text: `${fallbackPct}% ${cap(t('priceFalling'))}` };
     }
-    return { icon: '=', cls: 'trend-flat', text: t('priceStable') };
+
+    return { icon: '—', cls: 'trend-flat', text: '' };
 }
 
-function openMarket(prices, stock, progress) {
+function openMarket(prices, stock, progress, focus) {
     currentPrices = prices || {};
     playerStock = stock || {};
+    currentFocus = focus || null;
 
     if (progress) currentProgress = progress;
 
@@ -100,6 +120,7 @@ function renderProgress() {
 
 function closeMarket() {
     hideDetail();
+    currentFocus = null;
     document.getElementById('market-container').classList.add('hidden');
     fetch('https://ddev_farm/closeMarket', { method: 'POST' });
 }
@@ -109,6 +130,10 @@ function updatePrices(prices, stock, progress) {
     if (stock) playerStock = stock;
     if (progress) currentProgress = progress;
 
+    if (window.MarkerMenu && window.MarkerMenu.isSelling && window.MarkerMenu.isSelling()) {
+        window.MarkerMenu.refresh(currentPrices, playerStock);
+    }
+
     if (!document.getElementById('market-container').classList.contains('hidden')) {
         renderMarket();
         renderProgress();
@@ -117,14 +142,17 @@ function updatePrices(prices, stock, progress) {
 
 function hideDetail() {
     const detail = document.getElementById('market-detail');
-    if (detail) detail.classList.remove('visible');
+
+    if (detail) {
+        detail.classList.remove('visible');
+        detail.innerHTML = '';
+    }
 
     const panel = document.querySelector('.market-panel');
     if (panel) panel.style.borderColor = '';
 }
 
-function showDetail(key, price, stock) {
-    const detail = document.getElementById('market-detail');
+function buildDetail(key, price, stock, detail) {
     if (!detail) return;
 
     const parts = [];
@@ -147,29 +175,21 @@ function showDetail(key, price, stock) {
         }).join('')}</div>`
         : '';
 
-    const priceClass = price.price > price.basePrice ? 'price-up'
-        : price.price < price.basePrice ? 'price-down' : '';
-
-    const changePct = Math.round((price.change || 0) * 10) / 10;
-    const prevPrice = price.previousPrice !== undefined ? price.previousPrice : price.price;
-    const prevClass = changePct > 0 ? 'price-up' : changePct < 0 ? 'price-down' : '';
-    const prevText = (changePct > 0 ? '+' : '') + changePct.toFixed(1) + '%';
-
-    detail.className = `market-detail crop-${key}`;
+    detail.className = `mc-detail crop-${key}`;
     detail.innerHTML = `
-        <div class="detail-title">${price.label}</div>
-        <div class="detail-sep"></div>
-        <div class="detail-line"><span>${t('marketColumnStock')}</span><span>${stock.total}</span></div>
-        <div class="detail-line ${priceClass}"><span>${t('marketColumnPrice')}</span><span>$${price.price}</span></div>
-        <div class="detail-line ${prevClass}"><span>${t('marketPrevious')}</span><span>$${prevPrice} (${prevText})</span></div>
-        <div class="detail-line"><span>${t('marketColumnBase')}</span><span>$${price.basePrice}</span></div>
+        <div class="mc-meta">
+            <span>${t('marketColumnStock')} <b>${stock.total}</b></span>
+            <span>${t('marketColumnBase')} <b>$${price.basePrice}</b></span>
+        </div>
         ${qtyHtml}
-        <div class="detail-line detail-total"><span>${t('marketTotal')}</span><span class="qty-total">$0</span></div>
-        <div class="detail-actions">
-            ${stock.total > 0
-                ? `<button class="sell-btn sell-all" data-units="${stock.total}">${btnInner(t('marketSellAll'))}</button>
-                   <button class="sell-btn sell-picked" disabled>${btnInner(t('marketSellCount', 0))}</button>`
-                : `<span class="no-stock">${t('marketNoStock')}</span>`}
+        <div class="mc-foot">
+            <span class="mc-total">${t('marketTotal')} <b class="qty-total">$0</b></span>
+            <div class="detail-actions">
+                ${stock.total > 0
+                    ? `<button class="sell-btn sell-all" data-units="${stock.total}">${btnInner(t('marketSellAll'))}</button>
+                       <button class="sell-btn sell-picked" disabled>${btnInner(t('marketSellCount', 0))}</button>`
+                    : `<span class="no-stock">${t('marketNoStock')}</span>`}
+            </div>
         </div>
     `;
 
@@ -254,12 +274,6 @@ function showDetail(key, price, stock) {
     }
 
     refreshPicked();
-    detail.classList.add('visible');
-
-    const panel = document.querySelector('.market-panel');
-    if (panel && typeof CROP_COLORS !== 'undefined') {
-        panel.style.borderColor = CROP_COLORS[key] || '';
-    }
 }
 
 function postSell(payload) {
@@ -313,47 +327,50 @@ function renderMarket() {
     hideDetail();
     list.innerHTML = '';
 
-    const order = ['apple', 'tomato', 'corn', 'orange'];
+    const wrapper = document.createElement('div');
+    wrapper.className = 'market-products-card';
+
+    const order = currentFocus ? [currentFocus] : ['apple', 'tomato', 'corn', 'orange'];
 
     for (const key of order) {
         const price = currentPrices[key];
         if (!price) continue;
 
         const stock = normalizeStock(playerStock[key]);
-        const trend = priceTrend(price.index);
+        const trend = priceTrend(price.index, price.change);
 
         const priceClass = price.price > price.basePrice ? 'price-up'
             : price.price < price.basePrice ? 'price-down' : '';
-
-        const row = document.createElement('div');
-        row.className = `market-row crop-${key}`;
 
         const changePct = Math.round((price.change || 0) * 10) / 10;
         const prevPrice = price.previousPrice !== undefined ? price.previousPrice : price.price;
         const changeCls = changePct > 0 ? 'up' : changePct < 0 ? 'down' : '';
         const changeText = (changePct > 0 ? '+' : '') + changePct.toFixed(1) + '%';
 
-        row.innerHTML = `
-            <img class="item-icon" src="images/${price.icon || key + '.png'}" alt="">
-            <span class="product-name">${price.label}</span>
-            <span class="price-col">
-                <span class="price-value ${priceClass}">$${price.price}</span>
-                <span class="price-prev ${changeCls}">$${prevPrice} · ${changeText}</span>
-            </span>
-            <span class="trend ${trend.cls}" title="${trend.text}">${trend.icon}</span>
+        const card = document.createElement('div');
+        card.className = `market-product crop-${key}`;
+
+        card.innerHTML = `
+            <div class="mc-head">
+                <img class="mc-icon" src="images/${price.icon || key + '.png'}" alt="">
+                <div class="mc-title">
+                    <span class="mc-name">${price.label}</span>
+                    ${trend.text ? `<span class="mc-trend ${trend.cls}">${trend.icon} ${trend.text}</span>` : ''}
+                </div>
+                <div class="mc-price">
+                    <span class="mc-now ${priceClass}">$${price.price}</span>
+                    <span class="mc-prev ${changeCls}">$${prevPrice} · ${changeText}</span>
+                </div>
+            </div>
+            <div class="mc-body"></div>
         `;
 
-        row.addEventListener('mouseenter', function () {
-            clearTimeout(detailTimer);
-            showDetail(key, price, stock);
-        });
+        buildDetail(key, price, stock, card.querySelector('.mc-body'));
 
-        row.addEventListener('mouseleave', function () {
-            detailTimer = setTimeout(hideDetail, 160);
-        });
-
-        list.appendChild(row);
+        wrapper.appendChild(card);
     }
+
+    list.appendChild(wrapper);
 }
 
 const marketDetailEl = document.getElementById('market-detail');
@@ -373,7 +390,21 @@ window.addEventListener('message', function (event) {
     if (!data || !data.action) return;
 
     if (data.action === 'openMarket') {
-        openMarket(data.prices, data.stock, data.progress);
+        openMarket(data.prices, data.stock, data.progress, data.focus);
+    } else if (data.action === 'sellCard') {
+        const focus = data.focus;
+        const price = (data.prices || {})[focus];
+        const stock = normalizeStock((data.stock || {})[focus]);
+
+        if (price && window.MarkerMenu) {
+            window.MarkerMenu.openSell({
+                crop: focus,
+                title: price.label,
+                price: price,
+                stock: stock,
+                color: typeof CROP_COLORS !== 'undefined' ? (CROP_COLORS[focus] || '') : '',
+            });
+        }
     } else if (data.action === 'updatePrices') {
         updatePrices(data.prices, data.stock, data.progress);
     } else if (data.action === 'closeMarket') {

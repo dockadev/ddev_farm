@@ -60,7 +60,7 @@ local function AimPoint()
         cam.x, cam.y, cam.z,
         dest.x, dest.y, dest.z,
         1 | 8 | 16,
-        PlayerPedId(), 0
+        cache.ped, 0
     )
 
     local _, hit, endCoords = GetShapeTestResult(handle)
@@ -131,7 +131,9 @@ local function ShowHint()
         end
     else
         header = ('Node Placement · %+.2fm'):format(zOffset)
-        label = ('Place %s'):format(crop)
+
+        local cropEntry = Config.CropMap[crop]
+        label = ('Place %s'):format(cropEntry and cropEntry.label or crop)
         extra = ('%d placed · X cancel'):format(placed)
     end
 
@@ -333,7 +335,7 @@ local function Start(mode, key, spacing, height, headingValue)
 
     crop = key
     model = Config.CropPropModel[key] or 'prop_bush_grape_01'
-    heading = headingValue or GetEntityHeading(PlayerPedId())
+    heading = headingValue or GetEntityHeading(cache.ped)
     zOffset = height or 0.0
     placed = 0
     previews = {}
@@ -385,7 +387,7 @@ RegisterNetEvent('ddev_farm:openTools', function()
     end
 
     NUI.OpenTools({
-        heading = math.floor(GetEntityHeading(PlayerPedId())),
+        heading = math.floor(GetEntityHeading(cache.ped)),
         crops = cropList,
         defaultSpacing = 4.0,
     })

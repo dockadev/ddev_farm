@@ -76,6 +76,17 @@ RegisterNetEvent('ddev_farm:openMarket', function()
     end)
 end)
 
+RegisterNetEvent('ddev_farm:prefetchMarket', function()
+    local source = source
+
+    CreateThread(function()
+        if not IsNearMarket(source) then return end
+
+        TriggerClientEvent('ddev_farm:marketPreview', source,
+            Market.GetPriceTable(), Market.GetPlayerStock(source), Progression.GetInfo(source))
+    end)
+end)
+
 local function IsNearNode(source, node, tolerance)
     local ped = GetPlayerPed(source)
     if not ped or ped == 0 then return false end
@@ -199,6 +210,14 @@ RegisterNetEvent('ddev_farm:harvestCanceled', function(nodeId)
 
     if pending and pending.nodeId == nodeId then
         pendingHarvest[source] = nil
+
+        local identifier = Bridge.GetIdentifier(source)
+        Farm.ConsumeNode(nodeId, identifier)
+
+        if not Farm.IsHarvestable(nodeId) then
+            Farm.SetCooldown(source, nodeId)
+            TriggerClientEvent('ddev_farm:nodeUpdate', -1, nodeId, false)
+        end
     end
 end)
 
@@ -248,6 +267,11 @@ RegisterNetEvent('ddev_farm:completeHarvest', function(nodeId, branchIndex, tier
         if tier == 'perfect' or tier == 'good' then
             return tier
         end
+
+        if tier == 'hit' then
+            return 'good'
+        end
+
         return 'miss'
     end
 
@@ -314,7 +338,7 @@ RegisterNetEvent('ddev_farm:completeHarvest', function(nodeId, branchIndex, tier
 
             if prefs.levelUp ~= false then
                 TriggerClientEvent('ddev_farm:notify', source,
-                    ('Level %d! Price bonus +%.1f%%'):format(info.level, bonusPct), 'success')
+                    ('Level %d! Price Bonus +%.1f%%'):format(info.level, bonusPct), 'success')
             end
         end
     end

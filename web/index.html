@@ -6,6 +6,7 @@
     <title>ddev_farm</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/farm.css">
+    <link rel="stylesheet" href="css/marker.css">
 </head>
 <body>
     
@@ -58,19 +59,23 @@
         <div id="hint-footer" class="hint-footer hidden"></div>
     </div>
 
+    <div id="marker-layer"></div>
+
     
     <div id="market-container" class="hidden">
         
         <div id="market-detail" class="market-detail"></div>
 
         <div class="market-panel">
-            <div class="market-header">
+            <div class="market-header market-head-card">
                 <span class="admin-title">
                     <span class="admin-title-rest" id="market-title" data-i18n="marketTitle">Market Prices</span>
                 </span>
                 <button class="close-btn" onclick="closeMarket()">&times;</button>
             </div>
+            <div class="market-sep"></div>
             <div id="market-progress" class="market-progress hidden"></div>
+            <div class="market-sep"></div>
             <div class="market-body">
                 <div id="market-rows" class="market-list"></div>
             </div>
@@ -81,17 +86,28 @@
     
     <div id="admin-container" class="hidden">
         <div id="admin-panel" class="admin-panel">
-            <div class="admin-header">
-                <span class="admin-title">
-                    <span class="brand"><span class="brand-name">docka</span><span class="brand-dev">dev</span></span>
-                    <span class="admin-title-rest" id="admin-title-rest">Farming Script - Config Menu</span>
-                </span>
-            </div>
-            <div class="admin-body">
-                <div id="admin-tabs" class="admin-tabs"></div>
-                <div id="admin-content" class="admin-content"></div>
-            </div>
-            <div class="admin-footer">
+                <div class="admin-header">
+                    <span class="admin-title">
+                        <span class="brand"><span class="brand-name">docka</span><span class="brand-dev">dev</span></span>
+                        <span class="admin-title-rest" id="admin-title-rest">Farming Script - Config Menu</span>
+                    </span>
+                </div>
+                <div class="admin-body">
+                    <div id="admin-tabs" class="admin-tabs"></div>
+                    <div id="admin-content" class="admin-content"></div>
+                </div>
+
+                <div class="admin-discord-row">
+                    <svg class="admin-discord-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill="currentColor" d="M20.317 4.369a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.009c.12.099.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.029zM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                    </svg>
+                    <button id="admin-discord-link" class="admin-discord-link-btn" type="button">
+                        <span id="admin-discord-url">.gg/Gep3cg64q4</span>
+                    </button>
+                    <span id="admin-discord-note" class="admin-discord-note"></span>
+                </div>
+
+                <div class="admin-footer">
                 <button id="admin-close" class="admin-btn">Close</button>
                 <span id="admin-hint" class="admin-hint"></span>
                 <div class="admin-actions">
@@ -132,6 +148,17 @@
                             <div class="farm-stat"><span data-i18n="farmHarvested">Harvested</span><b id="farm-stat-harvested">0</b></div>
                             <div class="farm-stat"><span data-i18n="farmSold">Sold</span><b id="farm-stat-sold">0</b></div>
                             <div class="farm-stat"><span data-i18n="farmEarned">Earned</span><b id="farm-stat-earned">$0</b></div>
+
+                            <div class="farm-prefs">
+                                <div class="farm-pref-row">
+                                    <span class="farm-pref-label" data-i18n="farmPrefLevel">Level Up Notifications</span>
+                                    <button class="farm-switch" id="farm-pref-level" data-pref="levelUp" role="switch" aria-checked="true"></button>
+                                </div>
+                                <div class="farm-pref-row">
+                                    <span class="farm-pref-label" data-i18n="farmPrefSounds">Sounds</span>
+                                    <button class="farm-switch" id="farm-pref-sounds" data-pref="sounds" role="switch" aria-checked="true"></button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -146,13 +173,9 @@
                 </div>
 
                 <div class="farm-foot">
-                    <button class="farm-pref" id="farm-pref-level" data-pref="levelUp">Level up notifications: ON</button>
-                    <button class="farm-pref" id="farm-pref-sounds" data-pref="sounds">Sounds: ON</button>
-                    <button class="farm-pref primary" id="farm-pref-save">Save</button>
+                    <button id="farm-close" class="admin-btn farm-close">Close</button>
+                    <button id="farm-pref-save" class="admin-btn primary farm-save">Save</button>
                 </div>
-
-                
-                <button class="farm-homebar" onclick="closeFarmPanel()" aria-label="Close"></button>
             </div>
         </div>
     </div>
@@ -245,6 +268,7 @@
     <script src="js/skillcheck.js"></script>
     <script src="js/market.js"></script>
     <script src="js/hud.js"></script>
+    <script src="js/marker.js"></script>
     <script src="js/admin-i18n.js"></script>
     <script src="js/admin.js"></script>
     <script src="js/farm.js"></script>

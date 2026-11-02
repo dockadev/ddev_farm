@@ -12,7 +12,7 @@
   "skillcheckMiss": "Mancato...",
   "marketTitle": "Prezzi di Mercato",
   "marketMaxLevel": "MAX",
-  "marketBonusLabel": "Bonus prezzo",
+  "marketBonusLabel": "Bonus Prezzo",
   "marketColumnProduct": "Prodotto",
   "marketColumnPrice": "Prezzo Attuale",
   "marketPrevious": "Prezzo Precedente",
@@ -24,6 +24,7 @@
   "marketTotal": "Totale",
   "marketSold": "Venduto",
   "marketSellAll": "Vendi Tutto",
+  "backToList": "Torna alla lista",
   "marketNoStock": "-",
   "marketFooter": "I prezzi cambiano con il volume reale delle vendite.",
   "marketUnits": "{0} unità",
@@ -43,11 +44,14 @@
   "farmEarned": "Guadagnato",
   "farmRecentSales": "Vendite Recenti",
   "farmNoSales": "Nessuna vendita.",
-  "farmPrefLevel": "Notifiche di livello",
+  "farmPrefLevel": "Notifiche di Livello",
   "farmPrefSounds": "Suoni",
   "farmSave": "Salva",
   "farmUnitSuffix": "u",
   "toolsRestartWarn": "Dopo il posizionamento, premi 'Applica Punti' in /farmadmin (o riavvia ddev_farm) per vedere i prop nel gioco.",
   "farmRoadmap": "Premi di Livello",
-  "farmToNext": "mancano {0}"
+  "farmToNext": "mancano {0}",
+  "farmUnits": "Unità",
+  "farmPerUnit": "per Unità",
+  "farmAverage": "media"
 }

@@ -106,7 +106,7 @@ RegisterNetEvent('ddev_farm:setupNodes', function(nodeList)
 
     local queue = {}
     local spawnDist = Config.Harvest.renderDistance or 150.0
-    local coords = GetEntityCoords(PlayerPedId())
+    local coords = GetEntityCoords(cache.ped)
 
     for _, node in ipairs(nodeList or {}) do
         if node.coords and Inside(node.coords, coords, spawnDist) then
@@ -148,7 +148,7 @@ CreateThread(function()
         local list = DdevFarm.nodes
 
         if Config.Harvest.spawnProps and list then
-            local coords = GetEntityCoords(PlayerPedId())
+            local coords = GetEntityCoords(cache.ped)
             local spawnDist = Config.Harvest.renderDistance or 150.0
             local budget = 8
 

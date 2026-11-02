@@ -1,7 +1,6 @@
 -- Client - market NPC and blip.
 
 local marketNpc = nil
-local hintShown = false
 
 local function LoadModelSafe(model, timeout)
     local hash = joaat(model)
@@ -104,56 +103,46 @@ CreateThread(function()
     CreateStaticBlip(market.coords, 500, 5, market.label)
 
     marketNpc = SpawnStaticPed(market)
+
+    local options = {}
+
+    for _, crop in ipairs(Config.Crops) do
+        options[#options + 1] = { key = crop.key, label = crop.label, crop = crop.key }
+    end
+
+    Marker.Add({
+        id = 'market_npc',
+        entity = marketNpc,
+        coords = vector3(market.coords.x, market.coords.y, market.coords.z),
+        offsetZ = 0.75,
+        range = Config.Marker and Config.Marker.interactRange or 1.0,
+        drawDistance = Config.Marker and Config.Marker.drawDistance or 3.0,
+        prompt = L('options'),
+        menuTitle = L('whatToSell'),
+        options = options,
+        event = 'ddev_farm:markerAction',
+    })
 end)
 
-CreateThread(function()
-    while true do
-        local ped = PlayerPedId()
+AddEventHandler('ddev_farm:markerMenuOpened', function(id)
+    if id ~= 'market_npc' then return end
 
-        if IsPedInAnyVehicle(ped, false) or DdevFarm.placing
-            or NUI.IsMarketOpen() or NUI.IsAdminOpen() or NUI.IsFarmOpen()
-            or NUI.IsToolsOpen() then
-            if hintShown then
-                hintShown = false
-                NUI.HideHint()
-            end
+    TriggerServerEvent('ddev_farm:prefetchMarket')
+end)
 
-            Wait(500)
-        else
-            local c = Config.Market.location.coords
-            local dist = #(GetEntityCoords(ped) - vector3(c.x, c.y, c.z))
+AddEventHandler('ddev_farm:markerAction', function(id, option)
+    if id ~= 'market_npc' then return end
+    if not Config.CropMap[option] then return end
 
-            if dist <= (Config.Market.location.radius or 6.0) then
-                if not hintShown then
-                    hintShown = true
+    DdevFarm.marketFocus = option
 
-                    NUI.ShowHint({
-                        label = 'Open',
-                        key = Config.Harvest.interactKeyLabel or 'E',
-                        header = Config.Market.location.label,
-                    })
-                end
+    local preview = DdevFarm.marketPreview
 
-                if IsControlJustPressed(0, Config.Harvest.interactKey or 38) then
-                    hintShown = false
-                    NUI.HideHint()
-
-                    TriggerServerEvent('ddev_farm:openMarket')
-
-                    Wait(500)
-                else
-                    Wait(0)
-                end
-            else
-                if hintShown then
-                    hintShown = false
-                    NUI.HideHint()
-                end
-
-                Wait(400)
-            end
-        end
+    if preview and NUI and NUI.SendSellCard then
+        NUI.SendSellCard(preview.prices, preview.stock, preview.progress, option)
     end
+
+    TriggerServerEvent('ddev_farm:openMarket')
 end)
 
 AddEventHandler('onResourceStop', function(resource)

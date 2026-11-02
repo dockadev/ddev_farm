@@ -24,6 +24,7 @@
   "marketTotal": "Gesamt",
   "marketSold": "Verkauft",
   "marketSellAll": "Alles verkaufen",
+  "backToList": "Zurück zur Liste",
   "marketNoStock": "-",
   "marketFooter": "Preise ändern sich mit dem echten Handelsvolumen.",
   "marketUnits": "{0} Einheiten",
@@ -49,5 +50,8 @@
   "farmUnitSuffix": "E",
   "toolsRestartWarn": "Nach dem Platzieren 'Punkte Anwenden' in /farmadmin ausfuehren (oder ddev_farm neu starten), damit die Props im Spiel erscheinen.",
   "farmRoadmap": "Level-Belohnungen",
-  "farmToNext": "noch {0}"
+  "farmToNext": "noch {0}",
+  "farmUnits": "Einheiten",
+  "farmPerUnit": "pro Einheit",
+  "farmAverage": "Ø"
 }

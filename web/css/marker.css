@@ -1,0 +1,437 @@
+#marker-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 40;
+    overflow: hidden;
+}
+
+.marker {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translate3d(0, 0, 0) translate(-50%, -50%);
+    pointer-events: none;
+    will-change: transform;
+}
+
+.marker-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 3px 10px 3px 3px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    transition: background 160ms ease, border-color 160ms ease;
+}
+
+.marker.near .marker-card {
+    border-color: var(--marker-accent, rgba(255, 255, 255, 0.12));
+    background: rgba(10, 10, 12, 0.55);
+}
+
+.marker-diamond {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border: 2px solid #ffffff;
+    border-radius: 3px;
+    background: var(--marker-accent, #ff9f1c);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+        0 0 6px var(--marker-accent, rgba(255, 159, 28, 0.6));
+    transform: rotate(45deg);
+    transition: width 160ms ease, height 160ms ease, border-radius 160ms ease,
+        transform 160ms ease;
+}
+
+.marker-key {
+    font-family: var(--font-heading, 'Chakra Petch'), sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    color: #14110c;
+    opacity: 0;
+    transform: rotate(-45deg);
+    transition: transform 160ms ease, opacity 100ms ease;
+}
+
+.marker-label {
+    display: none;
+    font-family: var(--font-heading, 'Chakra Petch'), sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    color: #ffffff;
+    white-space: nowrap;
+}
+
+.marker.near .marker-diamond {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    transform: rotate(0deg);
+}
+
+.marker.near .marker-key {
+    font-size: 12px;
+    opacity: 1;
+    transform: rotate(0deg);
+}
+
+.marker.near .marker-label {
+    display: inline-block;
+    animation: marker-label-in 140ms ease-out;
+}
+
+.marker.activating .marker-card {
+    transform: scale(1.18);
+    opacity: 0;
+    transition: transform 180ms ease, opacity 180ms ease;
+}
+
+@keyframes marker-label-in {
+    from {
+        opacity: 0;
+        transform: translateX(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.marker.menu-active {
+    display: none;
+}
+
+.marker.near .marker-card {
+    border-color: var(--marker-accent, #ff9f1c);
+}
+
+.marker-menu {
+    position: absolute;
+    transform: none;
+    width: 288px;
+    min-width: 288px;
+    padding: 6px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: rgba(10, 10, 13, 0.82);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+    pointer-events: auto;
+    font-family: var(--font-heading, 'Chakra Petch'), sans-serif;
+    animation: marker-menu-in 140ms ease-out;
+    contain: layout style paint;
+    transition: border-color 180ms ease, background-color 180ms ease;
+}
+
+.marker-menu::before {
+    display: none;
+}
+
+.marker-menu > * {
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes marker-menu-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.marker-menu-title {
+    padding: 6px 10px 4px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.marker-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    border: 0;
+    border-left: 2px solid var(--opt-accent, transparent);
+    border-radius: 2px;
+    background: transparent;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease, border-color 160ms ease;
+}
+
+.marker-option img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.marker-option span {
+    flex: 1;
+    text-align: left;
+}
+
+.marker-option:hover {
+    background: var(--opt-soft, rgba(255, 159, 28, 0.18));
+    color: #ffffff;
+}
+
+/* Sell card inside the marker menu */
+.marker-menu.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.marker-menu.sell {
+    border-color: var(--menu-accent, #ff9f1c);
+    background: rgba(10, 10, 13, 0.82);
+    animation: sell-card-in 180ms ease-out;
+}
+
+.marker-menu.sell::before {
+    display: none;
+}
+
+.marker-side {
+    animation: sell-card-in 160ms ease-out;
+}
+
+.marker-side.closing {
+    animation: sell-card-out 150ms ease-in forwards;
+}
+
+@keyframes sell-card-out {
+    to {
+        opacity: 0;
+        transform: translateY(4px) scale(0.97);
+    }
+}
+
+.marker-menu-level {
+    padding: 4px 10px 8px;
+}
+
+.mml-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.mml-level {
+    font-family: var(--font-heading, 'Chakra Petch'), sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.mml-bonus {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+.mml-bar {
+    height: 4px;
+    margin-top: 6px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.10);
+    overflow: hidden;
+}
+
+.mml-bar i {
+    display: block;
+    height: 100%;
+    background: #ff9f1c;
+}
+
+.mml-next {
+    margin-top: 4px;
+    font-size: 9.5px;
+    color: rgba(255, 255, 255, 0.5);
+    text-align: right;
+}
+
+.marker-menu-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 2px 4px 6px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.marker-menu-head .marker-menu-title {
+    padding: 0;
+    margin: 0;
+    border: 0;
+}
+
+@keyframes sell-card-in {
+    from {
+        opacity: 0.4;
+        transform: translateY(6px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.marker-menu.sell .marker-menu-title {
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border: 0;
+    color: #ffffff;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 13px;
+}
+
+.sell-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 2px 4px 6px;
+}
+
+.sell-price {
+    font-family: var(--font-heading, 'Chakra Petch'), sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--menu-accent, #ffffff);
+}
+
+.sell-price.up {
+    color: #7ee787;
+}
+
+.sell-price.down {
+    color: #ff7b72;
+}
+
+.sell-prev {
+    font-size: 10.5px;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+.sell-delta {
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.sell-delta.up {
+    color: #7ee787;
+}
+
+.sell-delta.down {
+    color: #ff7b72;
+}
+
+.sell-delta.flat {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.sell-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.sell-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 6px;
+    border: 0;
+    border-bottom: 1px solid var(--sep-color, rgba(255, 255, 255, 0.12));
+    border-radius: 0;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.sell-row:last-child {
+    border-bottom: 0;
+}
+
+.sell-row img {
+    width: 16px;
+    height: 16px;
+}
+
+.sell-qname {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.sell-qname.q0 { color: #b08968; }
+.sell-qname.q1 { color: rgba(255, 255, 255, 0.9); }
+.sell-qname.q2 { color: #58d68d; }
+
+.sell-have {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.sell-unit {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.sell-picked {
+    min-width: 20px;
+    text-align: right;
+    font-size: 12px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.sell-foot {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.sell-total {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.sell-total b {
+    margin-left: 4px;
+    font-size: 16px;
+    color: var(--menu-accent, #ffffff);
+}
+
+.sell-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.sell-actions .sell-btn {
+    flex: 1 1 0;
+    height: 28px;
+    font-size: 10.5px;
+}

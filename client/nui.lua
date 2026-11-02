@@ -112,7 +112,7 @@ function NUI.CloseSkillCheck()
     SendNUIMessage({ action = 'closeSkillCheck' })
 end
 
-function NUI.OpenMarket(prices, stock, progress)
+function NUI.OpenMarket(prices, stock, progress, focus)
     marketActive = true
 
     SetNuiFocus(true, true)
@@ -121,6 +121,26 @@ function NUI.OpenMarket(prices, stock, progress)
         prices = prices,
         stock = stock,
         progress = progress,
+        focus = focus,
+    })
+end
+
+function NUI.SendPreview(prices, stock, progress)
+    SendNUIMessage({
+        action = 'marketPreview',
+        prices = prices,
+        stock = stock,
+        progress = progress,
+    })
+end
+
+function NUI.SendSellCard(prices, stock, progress, focus)
+    SendNUIMessage({
+        action = 'sellCard',
+        prices = prices,
+        stock = stock,
+        progress = progress,
+        focus = focus,
     })
 end
 

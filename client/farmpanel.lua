@@ -1,12 +1,14 @@
--- Client - /farmtablet player panel.
+-- Client - /farmpanel player panel.
 
-RegisterCommand('farmtablet', function()
+RegisterCommand('farmpanel', function()
     if NUI.IsMarketOpen() or NUI.IsAdminOpen() or NUI.IsFarmOpen() then
         return
     end
 
     TriggerServerEvent('ddev_farm:openFarm')
 end, false)
+
+TriggerEvent('chat:addSuggestion', '/farmpanel', 'Open the Farm Panel (Level, Bonus Roadmap, Recent Sales)')
 
 RegisterNetEvent('ddev_farm:farmData', function(data)
     if type(data) ~= 'table' then return end

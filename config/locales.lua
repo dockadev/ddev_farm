@@ -21,6 +21,9 @@ Locales = {
         harvested = '%s toplandı!',
 
         market = 'Pazar',
+        openMarket = 'Marketi Aç',
+        options = 'Seçenekler',
+        whatToSell = 'Ne satmak istiyorsun?',
         marketTitle = 'Pazar Fiyatları',
         marketOpen = 'Pazar tablosu',
         sell = 'Sat',
@@ -62,6 +65,9 @@ Locales = {
         harvested = 'Harvested %s!',
 
         market = 'Market',
+        openMarket = 'Open Market',
+        options = 'Options',
+        whatToSell = 'What do you want to sell?',
         marketTitle = 'Market Prices',
         marketOpen = 'Market board',
         sell = 'Sell',
@@ -103,6 +109,9 @@ Locales = {
         harvested = '%s geerntet!',
 
         market = 'Markt',
+        openMarket = 'Markt öffnen',
+        options = 'Optionen',
+        whatToSell = 'Was möchtest du verkaufen?',
         marketTitle = 'Marktpreise',
         marketOpen = 'Markttafel',
         sell = 'Verkaufen',
@@ -144,6 +153,9 @@ Locales = {
         harvested = '%s récolté(s) !',
 
         market = 'Marché',
+        openMarket = 'Ouvrir le marché',
+        options = 'Options',
+        whatToSell = 'Que veux-tu vendre ?',
         marketTitle = 'Prix du Marché',
         marketOpen = 'Tableau du marché',
         sell = 'Vendre',
@@ -185,6 +197,9 @@ Locales = {
         harvested = '%s raccolto!',
 
         market = 'Mercato',
+        openMarket = 'Apri mercato',
+        options = 'Opzioni',
+        whatToSell = 'Cosa vuoi vendere?',
         marketTitle = 'Prezzi di Mercato',
         marketOpen = 'Bacheca del mercato',
         sell = 'Vendi',
@@ -226,6 +241,9 @@ Locales = {
         harvested = '¡%s cosechado!',
 
         market = 'Mercado',
+        openMarket = 'Abrir mercado',
+        options = 'Opciones',
+        whatToSell = '¿Qué quieres vender?',
         marketTitle = 'Precios del Mercado',
         marketOpen = 'Tablón del mercado',
         sell = 'Vender',

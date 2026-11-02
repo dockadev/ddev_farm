@@ -1,6 +1,8 @@
 -- Server - admin panel settings and actions.
 
-RegisterCommand(Config.Admin.command or 'farmadmin', function(source)
+lib.addCommand(Config.Admin.command or 'farmadmin', {
+    help = 'Open the farm admin panel',
+}, function(source)
     if source == 0 then
         print('This command is used in-game.')
         return
@@ -9,7 +11,7 @@ RegisterCommand(Config.Admin.command or 'farmadmin', function(source)
     if not RequireFarmAdmin(source) then return end
 
     TriggerClientEvent('ddev_farm:adminOpen', source, Settings.Snapshot())
-end, false)
+end)
 
 RegisterNetEvent('ddev_farm:adminSave', function(values)
     local src = source
@@ -149,11 +151,13 @@ Actions.setNpcPos = function(src)
         coords.x, coords.y, coords.z)
 end
 
-RegisterCommand('farmplace', function(source)
+lib.addCommand('farmplace', {
+    help = 'Open the node placement tool',
+}, function(source)
     if not RequireFarmAdmin(source) then return end
 
     TriggerClientEvent('ddev_farm:openTools', source)
-end, false)
+end)
 
 Actions.nodeStats = function()
     local stats = {}

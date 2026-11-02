@@ -21,6 +21,28 @@ SettingsRegistry = {
         path = { 'Economy', 'antiDump' },
         type = 'bool', group = 'market', label = 'Anti-Dump Damping',
     },
+    ['economy.antiDumpAffectsPayout'] = {
+        path = { 'Economy', 'antiDumpAffectsPayout' },
+        type = 'bool', group = 'market', label = 'Anti-Dump Affects Payout',
+    },
+    ['economy.autoCalibrate'] = {
+        path = { 'Economy', 'autoCalibrate' },
+        type = 'bool', group = 'market', label = 'Auto-Calibrate Baseline',
+    },
+    ['economy.baseSupplyRate'] = {
+        path = { 'Economy', 'baseSupplyRate' },
+        type = 'number', min = 1, max = 500, step = 1, int = true,
+        group = 'market', label = 'Baseline Supply per Window', unit = 'units',
+    },
+    ['economy.simulationAffectsPrice'] = {
+        path = { 'Economy', 'simulationAffectsPrice' },
+        type = 'bool', group = 'market', label = 'Synthetic Flow Affects Price',
+    },
+    ['economy.stockDecay'] = {
+        path = { 'Economy', 'marketStockDecay' },
+        type = 'number', min = 0, max = 0.2, step = 0.01,
+        group = 'market', label = 'Market Stock Decay', unit = 'x', advanced = true,
+    },
     ['economy.impactDivisor'] = {
         path = { 'Economy', 'impactDivisor' },
         type = 'number', min = 10, max = 200, step = 5, int = true,
@@ -190,6 +212,13 @@ SettingsRegistry = {
         path = { 'Locale' },
         type = 'enum', options = { 'en', 'tr', 'de', 'fr', 'it', 'es' },
         group = 'world', label = 'Interface Language',
+        global = true,
+    },
+
+    ['skillcheck.engine'] = {
+        path = { 'SkillCheck', 'engine' },
+        type = 'enum', options = { 'custom', 'ox' },
+        group = 'harvest', label = 'Skill Check Engine',
         global = true,
     },
 

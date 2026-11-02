@@ -7,7 +7,7 @@ lua54 'yes'
 name 'ddev_farm'
 description 'Farming, harvest minigames and a live supply/demand market'
 author 'dockadev'
-version '1.0.0'
+version '1.1.0'
 
 shared_scripts {
     '@ox_lib/init.lua',
@@ -26,6 +26,7 @@ client_scripts {
     'client/nui.lua',
     'client/blips.lua',
     'client/main.lua',
+    'client/marker.lua',
     'client/props.lua',
     'client/interaction.lua',
     'client/marketnpc.lua',
@@ -59,12 +60,14 @@ files {
     'web/index.html',
     'web/css/style.css',
     'web/css/farm.css',
+    'web/css/marker.css',
     'web/js/locale.js',
     'web/js/theme.js',
     'web/js/progress.js',
     'web/js/skillcheck.js',
     'web/js/market.js',
     'web/js/hud.js',
+    'web/js/marker.js',
     'web/js/admin-i18n.js',
     'web/js/admin.js',
     'web/js/farm.js',
@@ -78,8 +81,4 @@ dependencies {
     'oxmysql',
     'ox_lib',
     'ox_inventory',
-}
-
-ox_libs {
-    'locale',
 }

@@ -124,7 +124,7 @@ CreateThread(function()
         Wait(1000)
 
         if Config.ShowBlips and Config.BlipOnRadar and Config.BlipShortDistance then
-            local coords = GetEntityCoords(PlayerPedId())
+            local coords = GetEntityCoords(cache.ped)
             local range = Config.BlipRadarRange or 150.0
             local r2 = range * range
 

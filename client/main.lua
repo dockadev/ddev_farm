@@ -80,8 +80,25 @@ CreateThread(function()
 end)
 
 RegisterNetEvent('ddev_farm:openMarket', function(prices, stock, progress)
-    if NUI and NUI.OpenMarket then
+    local focus = DdevFarm.marketFocus
+    DdevFarm.marketFocus = nil
+
+    if focus and NUI and NUI.SendSellCard then
+        NUI.SendSellCard(prices, stock, progress, focus)
+    elseif NUI and NUI.OpenMarket then
         NUI.OpenMarket(prices, stock, progress)
+    end
+end)
+
+RegisterNetEvent('ddev_farm:marketPreview', function(prices, stock, progress)
+    DdevFarm.marketPreview = {
+        prices = prices,
+        stock = stock,
+        progress = progress,
+    }
+
+    if NUI and NUI.SendPreview then
+        NUI.SendPreview(prices, stock, progress)
     end
 end)
 
@@ -114,7 +131,7 @@ RegisterCommand('farmpos', function(_, args)
         return
     end
 
-    local ped = PlayerPedId()
+    local ped = cache.ped
     local coords = GetEntityCoords(ped)
     local heading = GetEntityHeading(ped)
 
@@ -127,3 +144,7 @@ RegisterCommand('farmpos', function(_, args)
     local model = Config.CropPropModel[crop] or 'MODEL'
     print(('^2[ddev_farm]^7 %s node sent -> model: %s'):format(crop, model))
 end, false)
+
+TriggerEvent('chat:addSuggestion', '/farmpos', 'Save your current position as a harvest node', {
+    { name = 'crop', help = 'Crop key: ' .. CropKeyList() },
+})

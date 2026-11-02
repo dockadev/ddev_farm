@@ -34,11 +34,18 @@ Config.DisplayMetadata = {
 }
 
 Config.SkillCheck = {
+    engine = 'ox',
+
     duration = 3200,
 
     zoneWidth = 18,
 
     period = 1500,
+
+    ox = {
+        difficulty = { 'easy', 'easy' },
+        inputs = { 'e', 'e' },
+    },
 }
 
 Config.HarvestFlow = {
@@ -67,6 +74,11 @@ Config.Placement = {
 
     minSpacing = 0.5,
     maxSpacing = 25.0,
+}
+
+Config.Marker = {
+    drawDistance = 3.0,
+    interactRange = 1.0,
 }
 
 Config.Harvest = {
@@ -142,9 +154,14 @@ Config.Admin = {
 
     groups = { 'admin', 'god', 'owner', 'superadmin', 'management' },
 
-    ace = 'ddev_farm.admin',
+    -- ACE permissions: the first match wins.
+    -- 'command' matches servers that grant `add_ace group.admin command allow`,
+    -- which is the usual admin setup. Add your own ACE name here if needed.
+    aces = { 'group.admin', 'command' },
 
-    allowedIdentifiers = {},
+    -- QA only: when true, everyone except the console is treated as a non-admin.
+    -- Use it to test the normal-player flow; keep it false in a release.
+    testDeny = false,
 }
 
 Config.Market = {
@@ -187,6 +204,15 @@ Config.Economy = {
 
     impactDivisor = 50,
     antiDump = true,
+
+    -- When enabled, the anti-dump impact also reduces the payout.
+    antiDumpAffectsPayout = false,
+
+    -- When enabled, synthetic flow counts as supply and moves the price index.
+    simulationAffectsPrice = false,
+
+    -- Fraction of market stock removed each tick (visual/analytic consistency).
+    marketStockDecay = 0.02,
 
     dailySellCap = 0,
 

@@ -1,6 +1,8 @@
 -- Bridge - startup diagnostics (framework / database check).
 
-RegisterCommand('ddev_bridge_test', function(source)
+lib.addCommand('ddev_bridge_test', {
+    help = 'Print bridge, dependency and database diagnostics',
+}, function(source)
     if not RequireFarmAdmin(source) then return end
 
     local isConsole = source == 0
@@ -46,7 +48,7 @@ RegisterCommand('ddev_bridge_test', function(source)
 
         Bridge.Notify(source, 'Bridge diagnostics printed to the console.', 'inform')
     end
-end, false)
+end)
 
 CreateThread(function()
     if GetConvar('ddev_bridge_diagnostics', 'true') ~= 'true' then return end

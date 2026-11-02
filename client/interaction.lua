@@ -1,151 +1,136 @@
--- Client - harvest hint and nearest node detection.
+-- Client - harvest nodes as proximity markers.
 
-local currentId = nil
-local currentCanHarvest = nil
-local currentCharges = nil
+local markersById = {}
+local nodesById = {}
+local nodesRef = nil
 
-local function FindNearestNode(coords)
-    local radius = Config.Harvest.targetRadius or 1.5
-    local r2 = radius * radius
-    local best, bestDist = nil, nil
-    local list = DdevFarm.nodes
+local function IsBusy()
+    return DdevFarm.harvestBusy
+        or DdevFarm.placing
+        or NUI.IsSkillCheckOpen()
+        or NUI.IsMarketOpen()
+        or NUI.IsAdminOpen()
+        or NUI.IsFarmOpen()
+        or NUI.IsToolsOpen()
+end
 
-    if not list then return nil end
+local function CanHarvest(node)
+    return node and node.harvestable and (node.chargesLeft or 1) > 0
+end
 
-    for i = 1, #list do
-        local node = list[i]
+local function NodeOptions(node)
+    if not node then return {} end
+
+    local charges = node.charges or 1
+    local left = node.chargesLeft or charges
+
+    if not CanHarvest(node) then
+        return { { key = 'harvest', label = L('noHarvests'), disabled = true } }
+    end
+
+    return {
+        {
+            key = 'harvest',
+            label = ('%s %d/%d'):format(L('harvest'), left, charges),
+        },
+    }
+end
+
+local function AddNodeMarker(node)
+    if not node or not node.id or not node.coords then return end
+
+    nodesById[node.id] = node
+    markersById[node.id] = true
+
+    local crop = node.crop and Config.CropMap[node.crop]
+
+    Marker.Add({
+        id = node.id,
+        coords = node.coords,
+        crop = node.crop,
+        offsetZ = 0.9,
+        range = Config.Marker and Config.Marker.interactRange or 1.0,
+        drawDistance = Config.Marker and Config.Marker.drawDistance or 3.0,
+        key = Config.Harvest.interactKeyLabel or 'E',
+        menuTitle = crop and crop.label or nil,
+        getOptions = function()
+            return NodeOptions(node)
+        end,
+        event = 'ddev_farm:markerAction',
+    })
+end
+
+local function ClearMarkers()
+    for id in pairs(markersById) do
+        Marker.Remove(id)
+    end
+
+    markersById = {}
+    nodesById = {}
+end
+
+local function SyncMarkers(coords)
+    local px, py, pz = coords.x, coords.y, coords.z
+
+    local radius = Config.Marker and Config.Marker.drawDistance or 3.0
+    local radius2 = radius * radius
+    local seen = {}
+
+    for _, node in ipairs(DdevFarm.nodes or {}) do
         local c = node.coords
 
-        if c then
-            local dx, dy, dz = coords.x - c.x, coords.y - c.y, coords.z - c.z
-            local d2 = dx * dx + dy * dy + dz * dz
+        if c and node.id then
+            local dx, dy, dz = px - c.x, py - c.y, pz - c.z
 
-            if d2 <= r2 and (not bestDist or d2 < bestDist) then
-                best, bestDist = node, d2
+            if dx * dx + dy * dy + dz * dz <= radius2 then
+                seen[node.id] = true
+
+                if not markersById[node.id] then
+                    AddNodeMarker(node)
+                end
             end
         end
     end
 
-    return best
-end
-
-local function ClearHint()
-    if not currentId then return end
-
-    currentId = nil
-    currentCanHarvest = nil
-    currentCharges = nil
-    NUI.HideHint()
-end
-
-local function HideHintNow()
-    currentId = nil
-    currentCanHarvest = nil
-    currentCharges = nil
-    NUI.HideHint(true)
-end
-
-CreateThread(function()
-    local lastScan = nil
-    local cachedNode = nil
-    local listRef = nil
-    local frame = 0
-
-    while true do
-        frame = frame + 1
-
-        if DdevFarm.nodes ~= listRef then
-            listRef = DdevFarm.nodes
-            cachedNode = nil
-            lastScan = nil
-        end
-
-        local busy = DdevFarm.harvestBusy
-            or DdevFarm.placing
-            or NUI.IsSkillCheckOpen()
-            or NUI.IsMarketOpen()
-            or NUI.IsAdminOpen()
-            or NUI.IsFarmOpen()
-            or NUI.IsToolsOpen()
-
-        local node = nil
-
-        if busy then
-            cachedNode = nil
-            lastScan = nil
-        else
-            if frame % 6 == 0 or not cachedNode then
-                local ped = PlayerPedId()
-
-                if IsPedInAnyVehicle(ped, false) then
-                    cachedNode = nil
-                    lastScan = nil
-                else
-                    local coords = GetEntityCoords(ped)
-
-                    if not lastScan or not cachedNode then
-                        cachedNode = FindNearestNode(coords)
-                        lastScan = coords
-                    else
-                        local dx, dy, dz = coords.x - lastScan.x, coords.y - lastScan.y, coords.z - lastScan.z
-
-                        if dx * dx + dy * dy + dz * dz > 0.1225 then
-                            cachedNode = FindNearestNode(coords)
-                            lastScan = coords
-                        end
-                    end
-                end
-            end
-
-            node = cachedNode
-        end
-
-        if not node then
-            ClearHint()
-            Wait(200)
-        else
-            local chargesLeft = node.chargesLeft or 1
-            local canHarvest = node.harvestable and chargesLeft > 0
-
-            if currentId ~= node.id or currentCanHarvest ~= canHarvest or currentCharges ~= chargesLeft then
-                currentId = node.id
-                currentCanHarvest = canHarvest
-                currentCharges = chargesLeft
-
-                if canHarvest then
-                    local total = node.charges or 1
-                    local extra = nil
-
-                    if total > 1 then
-                        extra = ('%d/%d'):format(chargesLeft, total)
-                    end
-
-                    NUI.ShowHint({
-                        label = L('harvest'),
-                        key = Config.Harvest.interactKeyLabel or 'E',
-                        extra = extra,
-                        crop = node.crop,
-                    })
-                else
-                    NUI.ShowHint({
-                        label = L('noHarvests'),
-                        crop = node.crop,
-                    })
-                end
-            end
-
-            if canHarvest and IsControlJustPressed(0, Config.Harvest.interactKey or 38) then
-                HideHintNow()
-                TriggerServerEvent('ddev_farm:requestHarvest', node.id, node.branchIndex or 0)
-
-                Wait(300)
-            else
-                Wait(0)
-            end
+    for id in pairs(markersById) do
+        if not seen[id] then
+            Marker.Remove(id)
+            markersById[id] = nil
+            nodesById[id] = nil
         end
     end
+end
+
+AddEventHandler('ddev_farm:markerAction', function(id, option)
+    if option ~= 'harvest' then return end
+
+    local node = nodesById[id]
+
+    if not node or not CanHarvest(node) or IsBusy() then return end
+
+    TriggerServerEvent('ddev_farm:requestHarvest', node.id, node.branchIndex or 0)
 end)
 
-AddEventHandler('baseevents:onPlayerDied', ClearHint)
+local lastX, lastY, lastZ
 
-AddEventHandler('playerSpawned', ClearHint)
+CreateThread(function()
+    while true do
+        if DdevFarm.nodes ~= nodesRef then
+            nodesRef = DdevFarm.nodes
+            ClearMarkers()
+            lastX = nil
+        end
+
+        local coords = GetEntityCoords(cache.ped)
+
+        if not lastX
+            or math.abs(coords.x - lastX) > 0.25
+            or math.abs(coords.y - lastY) > 0.25
+            or math.abs(coords.z - lastZ) > 0.5 then
+            lastX, lastY, lastZ = coords.x, coords.y, coords.z
+            SyncMarkers(coords)
+        end
+
+        Wait(200)
+    end
+end)

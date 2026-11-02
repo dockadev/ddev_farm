@@ -93,7 +93,7 @@ function FarmPanel.GetRecentSales(identifier)
                 entries[#entries + 1] = {
                     units = units,
                     total = total,
-                    unitPrice = units > 0 and math.floor(total / units + 0.5) or 0,
+                    unitPrice = units > 0 and (total / units) or 0,
                     count = tonumber(row.sales) or 0,
                     ts = tonumber(row.last_ts) or 0,
                 }
@@ -138,6 +138,12 @@ RegisterNetEvent('ddev_farm:openFarm', function()
         local totals = FarmPanel.GetTotals(identifier)
         local prefs = FarmPanel.GetPrefs(identifier)
 
+        local crops = {}
+
+        for _, crop in ipairs(Config.Crops or {}) do
+            crops[#crops + 1] = { key = crop.key, label = crop.label }
+        end
+
         TriggerClientEvent('ddev_farm:farmData', source, {
             level = info.level,
             maxLevel = info.maxLevel,
@@ -148,6 +154,7 @@ RegisterNetEvent('ddev_farm:openFarm', function()
             nextBonus = info.nextBonus,
             enabled = info.enabled,
             levels = Progression.GetLevels(),
+            crops = crops,
             totals = totals,
             sales = FarmPanel.GetRecentSales(identifier),
             prefs = prefs,

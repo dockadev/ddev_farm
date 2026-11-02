@@ -4,7 +4,7 @@ Farming and live market resource for FiveM (QBCore / QBX / ESX).
 Players harvest crops, sell to a dynamic market and level up their bargaining bonus.
 
 - Author: **dockadev**
-- Version: **1.0.0**
+- Version: **1.1.0**
 - Price: **Free** — full source, no escrow, no obfuscation
 - Source: **https://github.com/dockadev/ddev_farm**
 - UI languages: **English, Türkçe, Deutsch, Français, Italiano, Español**
@@ -108,19 +108,29 @@ skipped silently; everything else keeps working. You can also point
 
 | Command | Access | Description |
 |---|---|---|
-| `/farmtablet` | Everyone | Player panel: level, bonus roadmap, recent sales, preferences |
+| `/farmpanel` | Everyone | Player panel: level, bonus roadmap, recent sales, preferences |
 | `/farmadmin` | Admin | Config panel: market, harvest, minigame, world, progression, tools, setup, languages |
 | `/farmplace` | Admin | Node placement tool (Place / Line mode, ground snap, NPC position) |
 | `/farmpos <crop>` | Admin | Quick alternative: saves your current standing position to `farmpos_<crop>.lua` |
 
 ### Admin access
 
-The script treats framework admins as admins automatically:
+Access is checked in this order:
 
-- **QBX / QB:** `PlayerData.group` is one of `admin`, `god`, `owner`, `superadmin`, `management`
-- **ESX:** `player.getGroup()` returns an admin group
-- Optional ACE permission: `ddev_farm.admin`
-- Optional extra identifiers: `Config.Admin.allowedIdentifiers`
+1. **ACE** — `group.admin` or `command` (`Config.Admin.aces`)
+2. **Framework admin group**
+   - QBX / QB: `PlayerData.group` is one of `admin`, `god`, `owner`, `superadmin`, `management`
+   - ESX: `player.getGroup()` returns an admin group
+
+Group membership alone is not visible to scripts, so the check looks for an ACE the group
+normally holds. Servers that grant admins `command` (the usual QBCore/ESX setup) are
+detected without any extra line:
+
+```cfg
+add_ace group.admin command allow
+```
+
+If your staff uses a different ACE, add its name to `Config.Admin.aces`.
 
 ---
 
@@ -154,6 +164,15 @@ Points are stored in `farmpos_<crop>.lua`; they are applied automatically on boo
 `/farmadmin → World → Interface Language` (a **server-wide** setting: it changes the
 language for every player).
 
+### Skill check engine
+
+```lua
+Config.SkillCheck.engine = 'custom' -- 'custom' | 'ox'
+```
+
+- `custom` — the two-stage timing check shipped with the resource (default look)
+- `ox` — uses `lib.skillCheck` from ox_lib; difficulty and inputs come from `Config.SkillCheck.ox`
+
 ### Support links
 
 ```lua
@@ -175,6 +194,33 @@ Leave a field empty to hide its button. Discord link is shown in the admin sideb
 - `resmon` stays low: node scanning is throttled, props are streamed by distance.
 - Restart the resource after changing market NPC, blip or model settings; node
   placement does **not** require a restart.
+
+---
+
+## Changelog
+
+### 1.1.0
+
+- Admin access is ACE-first: `group.admin` / `command`, with framework group fallback; config identifier lists and `/farmace` removed
+- Server admin commands use `lib.addCommand` (`/farmadmin`, `/farmplace`)
+- Client reads use the ox_lib `cache` (`cache.ped`)
+- Harvest nodes are scanned only when the player moves (200 ms throttle); the nearest marker and its options are cached (100 ms / 500 ms)
+- New `Config.SkillCheck.engine` option: `custom` or `ox` (`lib.skillCheck`), switchable in `/farmadmin → Harvest → Skill Check Engine`
+- New world-anchored marker flow: diamond morphs into an E card, hover sell card at the NPC, nearest-only rendering
+- Harvest UI merged with the skill check, crop-colored border and fading separator; harvest charge counter (`Harvest 3/3`) and exhaustion warning
+- Canceled harvests now consume a charge
+- Economy: fresh-market baseline calibration, `simulationAffectsPrice`, stock decay, anti-dump payout option, baseline-aware reset
+- Market tick can be forced from `/farmadmin → Tools → Run Tick Now`; `/ddev_economy_tick` removed
+- New price trend arrows (green/red/gray) based on the previous price
+- Player panel renamed to `/farmpanel`; admin-style layout, save button, notification/sound switches under Lifetime
+- Recent Sales grouped by crop (4 × 2 entries) with precise average unit price
+- `/farmadmin` fully restyled: tabs, switches, dropdowns, Tools/Setup pages, inline Discord link
+- `/farmplace` placement tools and the interaction hint restyled to the same theme
+- 6-language UI reviewed, labels use Title Case
+
+### 1.0.0
+
+- Initial public release
 
 ---
 

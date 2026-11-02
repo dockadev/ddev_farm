@@ -12,7 +12,7 @@
   "skillcheckMiss": "Kaçtı...",
   "marketTitle": "Pazar Fiyatları",
   "marketMaxLevel": "MAKS",
-  "marketBonusLabel": "Pazarlık bonusu",
+  "marketBonusLabel": "Pazarlık Bonusu",
   "marketColumnProduct": "Ürün",
   "marketColumnPrice": "Geçerli Fiyat",
   "marketPrevious": "Önceki Fiyat",
@@ -24,6 +24,7 @@
   "marketTotal": "Toplam",
   "marketSold": "Satıldı",
   "marketSellAll": "Tümü",
+  "backToList": "Listeye dön",
   "marketNoStock": "-",
   "marketFooter": "Fiyatlar gerçek satış hacmine göre değişir.",
   "marketUnits": "{0} adet",
@@ -43,11 +44,14 @@
   "farmEarned": "Kazanç",
   "farmRecentSales": "Son Satışlar",
   "farmNoSales": "Henüz satış yok.",
-  "farmPrefLevel": "Seviye bildirimi",
+  "farmPrefLevel": "Seviye Bildirimi",
   "farmPrefSounds": "Sesler",
   "farmSave": "Kaydet",
   "farmUnitSuffix": "b",
   "toolsRestartWarn": "Yerlestirdikten sonra proplarin oyunda gorunmesi icin /farmadmin icindeki 'Noktalari Uygula'ya bas (veya ddev_farm'i yeniden baslat).",
   "farmRoadmap": "Seviye Ödülleri",
-  "farmToNext": "{0} kaldı"
+  "farmToNext": "{0} kaldı",
+  "farmUnits": "Birim",
+  "farmPerUnit": "Birim Başına",
+  "farmAverage": "Ort."
 }

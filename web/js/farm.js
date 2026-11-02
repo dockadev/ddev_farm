@@ -8,19 +8,25 @@ function fmtNumber(value) {
     return String(Math.round(Number(value) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 
+function fmtPrice(value) {
+    const rounded = Math.round((Number(value) || 0) * 100) / 100;
+
+    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
+}
+
 function renderFarmPrefs() {
     const levelBtn = document.getElementById('farm-pref-level');
     const soundsBtn = document.getElementById('farm-pref-sounds');
     const saveBtn = document.getElementById('farm-pref-save');
 
     if (levelBtn) {
-        levelBtn.textContent = `${t('farmPrefLevel')}: ${farmPrefs.levelUp ? 'ON' : 'OFF'}`;
         levelBtn.classList.toggle('on', farmPrefs.levelUp);
+        levelBtn.setAttribute('aria-checked', farmPrefs.levelUp ? 'true' : 'false');
     }
 
     if (soundsBtn) {
-        soundsBtn.textContent = `${t('farmPrefSounds')}: ${farmPrefs.sounds ? 'ON' : 'OFF'}`;
         soundsBtn.classList.toggle('on', farmPrefs.sounds);
+        soundsBtn.setAttribute('aria-checked', farmPrefs.sounds ? 'true' : 'false');
     }
 
     if (saveBtn) {
@@ -34,33 +40,44 @@ function renderFarmSales() {
     if (!list) return;
 
     const groups = (farmData && farmData.sales) || [];
+    const crops = (farmData && farmData.crops) || [];
+    const byCrop = {};
 
-    if (!groups.length) {
-        list.innerHTML = `<div class="farm-empty">${t('farmNoSales')}</div>`;
-        return;
-    }
+    groups.forEach(function (group) {
+        byCrop[group.crop] = group;
+    });
 
-    list.innerHTML = groups.map(function (group) {
-        const rows = (group.entries || []).map(function (entry) {
-            return (
-                '<div class="farm-sale">' +
-                `<span class="farm-sale-units">${entry.units}x</span>` +
-                `<span class="farm-sale-total">$${fmtNumber(entry.total)}</span>` +
-                `<span class="farm-sale-unit">$${fmtNumber(entry.unitPrice)}${t('farmUnitSuffix')}</span>` +
-                '</div>'
-            );
-        }).join('');
+    const card = function (crop) {
+        const group = byCrop[crop.key];
+        const entries = ((group && group.entries) || []).slice(0, 2);
+        const label = (group && group.label) || crop.label;
+
+        const rows = entries.length
+            ? entries.map(function (entry) {
+                return (
+                    '<div class="farm-sale-row">' +
+                    '<div class="farm-sale-line">' +
+                    `<span class="farm-sale-units">${entry.units} ${t('farmUnits')}</span>` +
+                    `<span class="farm-sale-total">$${fmtNumber(entry.total)}</span>` +
+                    '</div>' +
+                    `<span class="farm-sale-unit">${t('farmAverage')} $${fmtPrice(entry.unitPrice)} ${t('farmPerUnit')}</span>` +
+                    '</div>'
+                );
+            }).join('')
+            : `<div class="farm-sale-empty">${t('farmNoSales')}</div>`;
 
         return (
             '<div class="farm-sale-group">' +
             '<div class="farm-sale-head">' +
-            `<img src="images/${group.crop}.png" alt="">` +
-            `<span class="farm-sale-name">${group.label}</span>` +
+            `<img src="images/${crop.key}.png" alt="">` +
+            `<span class="farm-sale-name">${label}</span>` +
             '</div>' +
             rows +
             '</div>'
         );
-    }).join('');
+    };
+
+    list.innerHTML = crops.map(card).join('');
 }
 
 function renderFarmRoadmap(d) {
@@ -81,7 +98,7 @@ function renderFarmRoadmap(d) {
 
         return '<div class="farm-roadmap-row' + state + '">' +
             `<span class="farm-roadmap-lv">Lv. ${lvl.level}</span>` +
-            `<span class="farm-roadmap-at">${fmtNumber(lvl.at)} ${t('farmUnitSuffix')}</span>` +
+            `<span class="farm-roadmap-at">${fmtNumber(lvl.at)} ${t('farmUnits')}</span>` +
             `<span class="farm-roadmap-bonus">+${pct}%</span>` +
             '</div>';
     }).join('');
@@ -162,7 +179,7 @@ function closeFarmPanel() {
     fetch('https://ddev_farm/closeFarm', { method: 'POST' });
 }
 
-document.querySelectorAll('.farm-pref[data-pref]').forEach(function (btn) {
+document.querySelectorAll('.farm-switch[data-pref]').forEach(function (btn) {
     btn.addEventListener('click', function () {
         const key = btn.dataset.pref;
         if (!key) return;
@@ -186,6 +203,12 @@ if (farmSaveBtn) {
             body: JSON.stringify({ prefs: farmPrefs }),
         }).catch(function () {});
     });
+}
+
+const farmCloseBtn = document.getElementById('farm-close');
+
+if (farmCloseBtn) {
+    farmCloseBtn.addEventListener('click', closeFarmPanel);
 }
 
 window.addEventListener('message', function (event) {

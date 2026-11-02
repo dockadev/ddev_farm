@@ -20,8 +20,13 @@ function Market.Calculate(crop, sold, bought, simulated)
     if not st then return 1.0, crop.basePrice end
 
     local eco = Config.Economy
+    local pressure = sold
 
-    st.soldEma = st.soldEma + eco.emaAlpha * (sold - st.soldEma)
+    if eco.simulationAffectsPrice and simulated and simulated > 0 then
+        pressure = pressure + simulated
+    end
+
+    st.soldEma = st.soldEma + eco.emaAlpha * (pressure - st.soldEma)
 
     local baseline
     if eco.autoCalibrate then
@@ -36,6 +41,10 @@ function Market.Calculate(crop, sold, bought, simulated)
 
     st.marketStock = st.marketStock + (sold - bought) + (simulated or 0)
     if st.marketStock < 0 then st.marketStock = 0 end
+
+    if eco.marketStockDecay and eco.marketStockDecay > 0 then
+        st.marketStock = st.marketStock * (1 - eco.marketStockDecay)
+    end
 
     if sold > 0 then
         st.idleTicks = 0
@@ -184,7 +193,19 @@ function Market.Sell(source, cropKey, units, qualityFilter)
 
     local unitPrice = Market.GetUnitPrice(cropKey, quality.quality)
     local negotiation = Progression and Progression.GetBonus(playerId) or 0
+
+    local impact = 1.0
+    if Config.Economy.antiDump then
+        local sold = playerSalesThisWindow[playerId] or 0
+        impact = 1 / (1 + sold / Config.Economy.impactDivisor)
+    end
+
     local effectivePrice = unitPrice * (1 + negotiation)
+
+    if Config.Economy.antiDumpAffectsPayout then
+        effectivePrice = effectivePrice * impact
+    end
+
     local total = math.floor(effectivePrice * units + 0.5)
 
     if Config.Economy.dailySellCap > 0 then
@@ -192,12 +213,6 @@ function Market.Sell(source, cropKey, units, qualityFilter)
         if soldToday + units > Config.Economy.dailySellCap then
             return false, 'daily_cap'
         end
-    end
-
-    local impact = 1.0
-    if Config.Economy.antiDump then
-        local sold = playerSalesThisWindow[playerId] or 0
-        impact = 1 / (1 + sold / Config.Economy.impactDivisor)
     end
 
     if total > 0 and not Bridge.AddMoney(source, 'money', total, 'pazar satisi: ' .. crop.label) then
@@ -443,7 +458,7 @@ function Market.ResetState()
         local st = state[crop.key]
         if st then
             st.priceIndex = 1.0
-            st.soldEma = 0
+            st.soldEma = Config.Economy.minBaseline
             st.baselineEma = Config.Economy.minBaseline
             st.marketStock = 0
             st.price = crop.basePrice
@@ -510,9 +525,9 @@ function Market.Load()
         if not row then
             MySQL.insert.await(
                 'INSERT INTO ddev_market (crop, base_price, price_index, sold_ema, baseline_ema, market_stock, last_tick) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                { crop.key, crop.basePrice, 1.0, 0, Config.Economy.minBaseline, 0, 0 }
+                { crop.key, crop.basePrice, 1.0, Config.Economy.minBaseline, Config.Economy.minBaseline, 0, 0 }
             )
-            row = { base_price = crop.basePrice, price_index = 1.0, sold_ema = 0,
+            row = { base_price = crop.basePrice, price_index = 1.0, sold_ema = Config.Economy.minBaseline,
                     baseline_ema = Config.Economy.minBaseline, market_stock = 0 }
         end
 
@@ -521,10 +536,15 @@ function Market.Load()
             baselineEma = Config.Economy.minBaseline
         end
 
+        local soldEma = tonumber(row.sold_ema) or 0
+        if soldEma < Config.Economy.epsilon then
+            soldEma = baselineEma
+        end
+
         state[crop.key] = {
             basePrice = crop.basePrice,
             priceIndex = tonumber(row.price_index) or 1.0,
-            soldEma = tonumber(row.sold_ema) or 0,
+            soldEma = soldEma,
             baselineEma = baselineEma,
             marketStock = tonumber(row.market_stock) or 0,
             price = math.floor(crop.basePrice * (tonumber(row.price_index) or 1.0) + 0.5),

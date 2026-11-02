@@ -51,6 +51,15 @@ RegisterNetEvent('ddev_farm:harvestResult', function(quality, count, bonus)
 end)
 
 local function AwaitMinigame(nodeId, branchIndex)
+    if Config.SkillCheck.engine == 'ox' then
+        local passed = lib.skillCheck(
+            Config.SkillCheck.ox and Config.SkillCheck.ox.difficulty or { 'easy', 'easy' },
+            Config.SkillCheck.ox and Config.SkillCheck.ox.inputs or { 'e', 'e' }
+        )
+
+        return passed and 'good' or 'miss'
+    end
+
     NUI.OpenSkillCheck({
         nodeId = nodeId,
         branchIndex = branchIndex,
@@ -88,7 +97,7 @@ RegisterNetEvent('ddev_farm:doHarvest', function(nodeId, branchIndex)
         local crop = nodeId and nodeId:match('node_(%a+)_%d+$')
 
         local anim = LoadHarvestAnim(crop)
-        local ped = PlayerPedId()
+        local ped = cache.ped
 
         if anim then
             TaskPlayAnim(ped, anim.dict, anim.clip, 8.0, -8.0, -1, anim.flag or 1, 0.0, false, false, false)
